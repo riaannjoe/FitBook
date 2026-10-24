@@ -1,4 +1,10 @@
 #!/usr/bin/env node
+
+require('dotenv').config();
+
 const app = require('../app');
 const port = process.env.PORT || 5000;
-app.listen(port, () => console.log(`FitBook API running on http://localhost:${port}/api/v1`));
+
+app.listen(port, () => {
+  console.log(`FitBook API running on http://localhost:${port}/api/v1`);
+});
