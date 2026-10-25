@@ -1,0 +1,9 @@
+Backend:
+
+cd "C:\Users\LENOVO\Desktop\Repositories\FitBook\FitBook\backend"
+npm run dev
+
+Frontend:
+
+cd "C:\Users\LENOVO\Desktop\Repositories\FitBook\FitBook\frontend"
+npm run dev
