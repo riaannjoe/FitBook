@@ -104,7 +104,9 @@ Use `user.role` to decide which screens to show (`admin`, `trainer`, `member`).
 ```
 
 ## 5. Test logins (after `npm run seed:users`)
-All sample users share the password `Fitbook@123`.
+Sample accounts are for local development only. Configure an explicit
+SEED_PASSWORD in your local environment before running the seed script.
+Never reuse development credentials in production.
 | role | username |
 |---|---|
 | admin | admin |

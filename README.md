@@ -1,310 +1,410 @@
-# FitBook — Smart Gym Management System (Backend API)
+# FitBook — Smart Gym Management System
 
-REST API for running a gym: members, subscriptions and payments, trainers, attendance, workout plans, and equipment maintenance. Built with **Node.js + Express + MySQL 8**, secured with **JWT** and **role-based access** (admin / trainer / member).
+FitBook is a full-stack gym management application designed to simplify everyday gym operations, including member management, subscriptions, payments, trainer assignments, attendance tracking, workout plans, and equipment maintenance.
 
-> **Status:** backend complete and tested; frontend not started. 66 endpoints, 15 tables, interactive Swagger docs.
+The project combines a React frontend with a Node.js/Express REST API and a MySQL database.
 
----
+> **Project status:** The backend API and admin frontend have been implemented. Trainer and member dashboards are currently placeholders, and some features remain under development.
 
-## Table of contents
+## Table of Contents
 
-1. [Features](#1-features)
-2. [Who can do what (roles)](#2-who-can-do-what-roles)
-3. [API overview](#3-api-overview)
-4. [Business rules built into the API](#4-business-rules-built-into-the-api)
-5. [Database design](#5-database-design)
-6. [Security and quality](#6-security-and-quality)
-7. [Response and error format](#7-response-and-error-format)
-8. [Setup](#8-setup)
-9. [Test logins](#9-test-logins)
-10. [Project structure](#10-project-structure)
-11. [Documentation for the frontend team](#11-documentation-for-the-frontend-team)
-12. [Known limitations and next steps](#12-known-limitations-and-next-steps)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Environment Configuration](#environment-configuration)
+- [Running the Application](#running-the-application)
+- [Authentication and Authorization](#authentication-and-authorization)
+- [API Documentation](#api-documentation)
+- [Database](#database)
+- [Security Considerations](#security-considerations)
+- [Known Limitations](#known-limitations)
+- [Future Improvements](#future-improvements)
 
----
+## Features
 
-## 1. Features
+### Admin Dashboard
 
-| Module | What it does |
+- **Dashboard:** Overview of gym operations and key metrics.
+- **Member Management:** View and manage member records.
+- **Membership Plans:** Manage available membership plans.
+- **Subscriptions:** Track member subscriptions and renewals.
+- **Payments:** Access payment records and related information.
+- **Trainer Management:** Manage trainer records.
+- **Attendance:** Track gym attendance.
+- **Workout Management:** Manage workout plans and exercise information.
+- **Equipment Management:** Maintain equipment records.
+- **Maintenance Management:** Track equipment maintenance requests.
+
+### Backend
+
+- RESTful API built with Express.js.
+- MySQL database integration.
+- JWT-based authentication.
+- Role-based access control.
+- Password hashing using bcrypt.
+- Request validation and centralized error handling where implemented.
+- Database constraints and business rules.
+- SQL triggers and stored procedures.
+
+## Tech Stack
+
+| Layer | Technologies |
 |---|---|
-| **Authentication** | Login with username and password, JWT token (8 hours), "who am I" endpoint, change password. Login attempts are rate limited. |
-| **User accounts** | Admin creates logins and links them to a member or trainer record. Registration is not public. |
-| **Dashboard** | One call returns active memberships, this month's revenue, today's attendance, open equipment issues, total/active members, total trainers and plans expiring in 7 days. |
-| **Member management** | Register, search (name, phone, email), filter by status, edit, delete. The profile call also returns the member's current plan and trainer. |
-| **Membership plans** | Create and manage plans (name, duration, price). |
-| **Subscriptions and renewals** | Buy or renew a plan in a single transaction that creates the subscription and the payment and activates the member. Cancel a plan, list expiring plans, and run an expiry check. |
-| **Payments and revenue reports** | Filterable payment history; revenue by month, by plan and by payment method. Only paid payments count as revenue. |
-| **Trainer management** | Trainer profiles, weekly schedules, and client lists. Salary is visible only to admins and to the trainer themselves. |
-| **Trainer assignments** | Assign a member to a trainer and end the assignment later. Duplicate active assignments are blocked. |
-| **Attendance** | Check-in and check-out at the desk, a live "who is in the gym now" view, and analytics: visits by hour, by weekday, and members inactive for N days. |
-| **Workout plans** | Exercise library, trainer-built plans (days, exercises, sets, reps), and assigning plans to members. Members see their plans grouped by day. |
-| **Equipment** | Equipment inventory with status (working, under repair, retired). |
-| **Maintenance** | Anyone logged in can report a broken machine; admin tracks it to resolution with repair cost. Equipment status updates automatically. |
-| **Member / trainer portal (`/me`)** | Members see their own profile, subscription, workout, attendance and payments. Trainers see their profile and clients. |
+| Frontend | React, Vite, JavaScript, CSS |
+| Backend | Node.js, Express.js |
+| Database | MySQL 8 |
+| Authentication | JSON Web Tokens (JWT), bcrypt |
+| API communication | HTTP/REST, JSON |
+| Development tools | Git, GitHub, npm |
 
----
+## Architecture
 
-## 2. Who can do what (roles)
+FitBook follows a client-server architecture.
 
-| Area | Admin | Trainer | Member |
-|---|:-:|:-:|:-:|
-| Dashboard, reports, payments, users | ✅ | — | — |
-| Members: list, create, edit, delete | ✅ | read only | — |
-| Plans: view | ✅ | ✅ | ✅ |
-| Plans: create, edit, delete | ✅ | — | — |
-| Subscriptions: buy, renew, cancel, list | ✅ | — | — |
-| Trainers: view | ✅ | ✅ | ✅ |
-| Trainers: create, edit, delete, schedules | ✅ | — | — |
-| Trainer assignments | ✅ | — | — |
-| Trainer's own clients | ✅ | own only | — |
-| Attendance (check-in/out, analytics) | ✅ | — | — |
-| Exercises: create, edit | ✅ | ✅ | — |
-| Exercises: delete | ✅ | — | — |
-| Workout plans: create and assign | ✅ | ✅ | — |
-| Equipment: view | ✅ | ✅ | ✅ |
-| Equipment: create, edit, delete | ✅ | — | — |
-| Report a maintenance issue | ✅ | ✅ | ✅ |
-| Update maintenance requests | ✅ | — | — |
-| Own data (`/me/*`) | — | profile, clients | profile, subscription, workout, attendance, payments |
-
-A member can also read their own `/members/:id/subscriptions` and `/members/:id/workout`, and nobody else's.
-
----
-
-## 3. API overview
-
-Base URL: `http://localhost:5000/api/v1`
-
-| Group | Endpoints |
-|---|---|
-| **Health** | `GET /health` |
-| **Auth** | `POST /auth/login` · `GET /auth/me` · `POST /auth/change-password` |
-| **Users** | `GET /users` · `POST /users` · `DELETE /users/:id` |
-| **Dashboard** | `GET /dashboard` |
-| **Members** | `GET /members` · `POST /members` · `GET /members/:id` · `PUT /members/:id` · `DELETE /members/:id` · `GET /members/:id/subscriptions` · `GET /members/:id/workout` |
-| **Plans** | `GET /plans` · `GET /plans/:id` · `POST /plans` · `PUT /plans/:id` · `DELETE /plans/:id` |
-| **Subscriptions** | `GET /subscriptions` · `POST /subscriptions` · `GET /subscriptions/expiring` · `POST /subscriptions/expire-check` · `PATCH /subscriptions/:id/cancel` |
-| **Payments and reports** | `GET /payments` · `GET /reports/revenue` |
-| **Trainers** | `GET /trainers` · `POST /trainers` · `GET /trainers/:id` · `PUT /trainers/:id` · `DELETE /trainers/:id` · `GET/POST /trainers/:id/schedule` · `DELETE /trainers/:id/schedule/:scheduleId` · `GET /trainers/:id/clients` |
-| **Assignments** | `GET /assignments` · `POST /assignments` · `PATCH /assignments/:id/end` |
-| **Attendance** | `GET /attendance` · `GET /attendance/live` · `GET /attendance/analytics` · `POST /attendance/check-in` · `POST /attendance/check-out` |
-| **Exercises** | `GET /exercises` · `POST /exercises` · `PUT /exercises/:id` · `DELETE /exercises/:id` |
-| **Workout plans** | `GET /workout-plans` · `POST /workout-plans` · `GET /workout-plans/:id` · `POST /workout-plans/assign` |
-| **Equipment** | `GET /equipment` · `GET /equipment/:id` · `POST /equipment` · `PUT /equipment/:id` · `DELETE /equipment/:id` |
-| **Maintenance** | `GET /maintenance` · `POST /maintenance` · `PUT /maintenance/:id` |
-| **Me (portal)** | `GET /me/profile` · `GET /me/subscription` · `GET /me/workout` · `GET /me/attendance` · `GET /me/payments` · `GET /me/clients` |
-
-Full request and response details for every endpoint are in Swagger: `http://localhost:5000/api/docs`.
-
-**List endpoints** support `?page=1&limit=20` (limit max 100) and, where it makes sense, `search` and `status` filters.
-
----
-
-## 4. Business rules built into the API
-
-- **Subscribe / renew is atomic.** It calls the `sp_subscribe` stored procedure, which creates the subscription, records the payment and sets the member to active in one transaction. If anything fails, everything is rolled back.
-- **Renewals stack.** Renewing while a plan is still active starts the new plan when the current one ends.
-- **Suspended members cannot buy a plan.**
-- **Check-in needs an active membership.** Members without one are refused. A member who is already checked in cannot check in twice.
-- **Check-out is always after check-in**, even if both happen in the same second.
-- **Expiry check.** `POST /subscriptions/expire-check` marks overdue subscriptions as expired and flips members with no active plan to expired.
-- **Cancelling** a subscription also expires the member if they have no other active plan.
-- **Equipment status is automatic.** Reporting an issue sets the equipment to *under repair*; marking the request *resolved* sets it back to *working* and stamps the resolved date.
-- **Revenue counts only `paid` payments.** Failed and pending payments are excluded.
-- **One active assignment** per trainer–member pair.
-- **Creating a login** can link it to an existing member or trainer; a record that already has a login cannot be linked again. Admins cannot delete their own account.
-- **Trainer salary** is hidden from everyone except admins and the trainer themselves.
-
----
-
-## 5. Database design
-
-**15 tables** in 3NF, MySQL 8, with primary keys, foreign keys (cascade or set-null where appropriate), `UNIQUE`, `CHECK`, `ENUM`, `NOT NULL` and `DEFAULT` constraints.
-
-| Table | Purpose |
-|---|---|
-| `users` | Logins (username, bcrypt hash, role) |
-| `membership_plans` | Plan name, duration, price |
-| `members` | Member profile and status |
-| `subscriptions` | Which member bought which plan, and the dates |
-| `payments` | Payment per subscription (amount, method, status) |
-| `trainers` | Trainer profile, specialization, salary |
-| `trainer_schedules` | Weekly working hours |
-| `trainer_assignments` | Trainer ↔ member (many-to-many) |
-| `attendance` | Check-in and check-out times |
-| `exercises` | Exercise library |
-| `workout_plans` | Plan title, goal, level, owner trainer |
-| `workout_plan_exercises` | Plan ↔ exercise with day, sets and reps (many-to-many) |
-| `member_workout_plans` | Member ↔ plan (many-to-many) |
-| `equipment` | Gym equipment and its status |
-| `maintenance_requests` | Issues reported against equipment |
-
-**Other database objects**
-- **View** `v_dashboard`: the four headline numbers for the admin dashboard.
-- **Stored procedure** `sp_subscribe`: the subscribe/renew transaction.
-- **Triggers** `trg_maint_ins` and `trg_maint_upd`: keep equipment status in sync with maintenance requests.
-- **Indexes** on attendance (member, date), subscriptions (end date) and payments (date).
-
-Files: `database/schema.sql` (tables, view, procedure, triggers, indexes), `database/seed.sql` (sample data, 10+ rows per table), `database/queries.sql` (joins, aggregates, subqueries for your report).
-
----
-
-## 6. Security and quality
-
-- Passwords stored as **bcrypt** hashes; **JWT** tokens with expiry.
-- **Role checks** on every route, plus ownership checks so members and trainers can only read their own data.
-- **Helmet** security headers and **CORS** limited to the origins in `.env`.
-- **Login rate limit:** 20 attempts per 15 minutes.
-- **Input validation** with Zod on bodies, queries and params.
-- **Parameterized SQL** everywhere (no string-built queries from user input).
-- **Central error handler:** database errors become clean codes (`DUPLICATE`, `IN_USE`, `INVALID_REFERENCE`, ...) without leaking table or column names in production.
-- **Layered code:** each feature has routes → controller → service → schema.
-
----
-
-## 7. Response and error format
-
-Success:
-```json
-{ "success": true, "data": { }, "meta": { "page": 1, "limit": 20, "total": 134, "totalPages": 7 } }
-```
-`meta` appears only on paginated lists.
-
-Error:
-```json
-{ "success": false, "error": { "code": "VALIDATION_ERROR", "message": "phone: Phone must be 10-15 digits",
-  "details": [ { "field": "phone", "message": "Phone must be 10-15 digits" } ] } }
+```text
+                User
+                  |
+                  v
+          React + Vite Frontend
+             localhost:3000
+                  |
+                  | HTTP requests
+                  | /api/*
+                  v
+          Node.js + Express API
+             localhost:5000
+                  |
+                  | SQL queries
+                  v
+              MySQL 8
 ```
 
-| Status | Typical codes |
-|---|---|
-| 400 | `VALIDATION_ERROR`, `NO_ACTIVE_MEMBERSHIP`, `INVALID_REFERENCE`, `WRONG_PASSWORD` |
-| 401 | `UNAUTHORIZED`, `INVALID_TOKEN`, `INVALID_CREDENTIALS` |
-| 403 | `FORBIDDEN` |
-| 404 | `NOT_FOUND`, `NOT_CHECKED_IN`, `PROFILE_NOT_LINKED` |
-| 409 | `DUPLICATE`, `IN_USE`, `ALREADY_CHECKED_IN`, `ALREADY_ASSIGNED`, `MEMBER_SUSPENDED`, `NOT_ACTIVE`, `CANNOT_LINK` |
-| 429 | `TOO_MANY_REQUESTS` |
-| 500 | `INTERNAL_ERROR` |
+During local development, Vite proxies API requests to the Express server. In production, the frontend and backend can be deployed separately and configured to communicate through the deployed API URL.
 
-Conventions: dates `YYYY-MM-DD`, date-times `YYYY-MM-DD HH:MM:SS`, money and ids as JSON numbers, `PUT` is a partial update, optional fields are omitted or `null` (not empty strings).
+## Project Structure
 
----
+```text
+FitBook/
+├── backend/
+│   ├── config/              # Backend configuration
+│   ├── controllers/         # Request handlers
+│   ├── database/            # Database scripts and seed utilities
+│   ├── docs/                # API documentation
+│   ├── middleware/          # Authentication and other middleware
+│   ├── models/              # Data access and models
+│   ├── routes/              # API route definitions
+│   ├── services/            # Business logic, where implemented
+│   ├── .env.example         # Environment variable template
+│   └── package.json
+│
+├── frontend/
+│   ├── public/              # Static assets
+│   ├── src/
+│   │   ├── api/             # API client
+│   │   ├── assets/          # Images and other assets
+│   │   ├── components/      # Reusable UI components
+│   │   ├── context/         # React context
+│   │   └── pages/           # Application pages
+│   ├── .env.example         # Frontend environment template
+│   ├── package.json
+│   └── vite.config.js
+│
+├── .gitignore
+└── README.md
+```
 
-## 8. Setup
+*The directory structure may evolve as development continues.*
 
-**Requirements:** Node.js 18+ and MySQL 8.
+## Prerequisites
+
+Install the following before running FitBook locally:
+
+- [Node.js](https://nodejs.org/) and npm.
+- [MySQL 8](https://dev.mysql.com/downloads/).
+- [Git](https://git-scm.com/).
+- A code editor such as [Visual Studio Code](https://code.visualstudio.com/).
+
+Ensure MySQL is running and that you have permission to create and manage a database.
+
+## Getting Started
+
+### 1. Clone the repository
 
 ```bash
-# 1. install packages
+git clone <YOUR_GITHUB_REPOSITORY_URL>
+cd FitBook
+```
+
+Replace the repository URL with the actual URL of your GitHub repository.
+
+### 2. Configure the database
+
+Start MySQL and create a database for FitBook.
+
+```sql
+CREATE DATABASE fitbook;
+```
+
+Review the SQL files in `backend/database/` and import the schema, seed data, triggers, and stored procedures as applicable. Follow the order and instructions provided by the database scripts.
+
+Make sure the database name and credentials match your backend environment configuration.
+
+### 3. Configure the backend
+
+Open a terminal in the project root:
+
+```bash
+cd backend
 npm install
-
-# 2. create your .env  (Windows: copy .env.example .env)
-cp .env.example .env
-#    then set DB_PASS, JWT_SECRET and CORS_ORIGIN inside it
-
-# 3. create the database (drop an old fitbook database first if you have one)
-mysql -u root -p -e "DROP DATABASE IF EXISTS fitbook;"
-mysql -u root -p -e "source database/schema.sql"
-mysql -u root -p -e "source database/seed.sql"
-
-# 4. give the sample users a working password (development only)
-npm run seed:users
-
-# 5. start the server
-npm run dev        # auto-restart on changes
-# or
-npm start
 ```
 
-Expected output:
-```
-FitBook API running  ->  http://localhost:5000/api/v1
-Swagger docs         ->  http://localhost:5000/api/docs
+Create a local environment file by copying the template.
+
+**Windows PowerShell:**
+
+```powershell
+Copy-Item .env.example .env
 ```
 
-**Quick check:** open `http://localhost:5000/api/v1/health` — you should get `{"success":true,"data":{"status":"ok",...}}`.
+**macOS/Linux:**
 
-**Fresh start without sample data?** Skip `seed.sql` and create the first admin with:
 ```bash
-npm run create-admin -- myadmin MyStrongPass@123
+cp .env.example .env
 ```
 
-### Environment variables (`.env`)
+Open `backend/.env` and configure the database connection, JWT secret, and other required settings. See [Environment Configuration](#environment-configuration).
 
-| Variable | Meaning |
+Never commit your actual `.env` file.
+
+### 4. Configure the frontend
+
+Open a second terminal in the project root:
+
+```bash
+cd frontend
+npm install
+```
+
+Create the local environment file.
+
+**Windows PowerShell:**
+
+```powershell
+Copy-Item .env.example .env
+```
+
+**macOS/Linux:**
+
+```bash
+cp .env.example .env
+```
+
+For local development, configure:
+
+```env
+VITE_API_BASE=/api/v1
+```
+
+The Vite development server proxies `/api` requests to the backend running on port `5000`.
+
+### 5. Prepare development accounts
+
+If you need seeded development accounts, inspect the available seed scripts and their instructions.
+
+Configure an explicit `SEED_PASSWORD` in `backend/.env` before running the user-seeding script. Use a strong, unique password and do not reuse development credentials in production.
+
+Run the seed command from the `backend` directory if your `package.json` defines it:
+
+```bash
+npm run seed:users
+```
+
+Only run the seed command after configuring the database and required environment variables.
+
+## Environment Configuration
+
+### Backend
+
+Configure the variables supported by `backend/.env.example`. Typical settings include:
+
+| Variable | Purpose |
 |---|---|
-| `PORT` | Server port (default 5000) |
-| `NODE_ENV` | `development` or `production` |
-| `CORS_ORIGIN` | Comma-separated frontend URLs allowed to call the API |
-| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME` | MySQL connection |
-| `JWT_SECRET` | Long random string used to sign tokens |
-| `JWT_EXPIRES_IN` | Token lifetime, e.g. `8h` |
+| `DB_HOST` | MySQL server hostname |
+| `DB_PORT` | MySQL server port, if supported by the configuration |
+| `DB_USER` | MySQL username |
+| `DB_PASS` | MySQL password |
+| `DB_NAME` | Database name |
+| `JWT_SECRET` | Secret used to sign authentication tokens |
+| `CORS_ORIGIN` | Allowed frontend origin or origins |
+| `SEED_PASSWORD` | Explicit password for seeded development accounts |
 
----
+The exact required variables depend on the backend configuration. Consult `backend/.env.example` and `backend/config/env.js`.
 
-## 9. Test logins
+Use a long, randomly generated JWT secret. Keep all real credentials in local environment files or your deployment provider's secret manager.
 
-After `npm run seed:users`, every sample user has the password **`Fitbook@123`**.
+### Frontend
 
-| Role | Username | Linked to |
-|---|---|---|
-| admin | `admin` | — |
-| trainer | `trainer_rahul`, `trainer_priya`, `trainer_amit`, `trainer_neha`, `trainer_karan` | trainers 1–5 |
-| member | `member_aarav`, `member_diya`, `member_rohan`, `member_isha`, `member_vivek`, `member_anjali`, `member_kunal`, `member_sneha`, `member_harsh`, `member_pooja` | members 1–10 |
+Configure `frontend/.env.example` as needed.
 
-Try it: open Swagger at `/api/docs`, run `POST /auth/login` with `admin` / `Fitbook@123`, click **Authorize**, paste the token, then call any endpoint.
+| Variable | Purpose |
+|---|---|
+| `VITE_API_BASE` | Base path or URL used by the frontend API client |
 
-> Development passwords only. Change them, and use a strong `JWT_SECRET`, before any real deployment.
+For local development:
 
----
-
-## 10. Project structure
-
-```
-src/
-  server.js              starts the server (checks the DB connection first)
-  app.js                 express setup: helmet, cors, rate limit, docs, routes, error handler
-  config/                env.js (validates .env), db.js (mysql pool + transaction helper)
-  middleware/            auth.js (JWT + roles), validate.js (zod), errorHandler.js, notFound.js
-  utils/                 ApiError, asyncHandler, response helpers, pagination, sql helpers
-  routes/index.js        mounts every module under /api/v1
-  modules/<feature>/     <feature>.routes.js      URL + middleware only
-                         <feature>.controller.js  reads the request, sends the response
-                         <feature>.service.js     business rules + SQL
-                         <feature>.schema.js      input validation (zod)
-database/                schema.sql, seed.sql, queries.sql, seed-users.js, create-admin.js
-docs/                    openapi.json, FitBook.postman_collection.json, FRONTEND_GUIDE.md, build_docs.py
+```env
+VITE_API_BASE=/api/v1
 ```
 
-Request flow: `route → auth → validate → controller → service → MySQL`.
+For a separately deployed API, configure the appropriate HTTPS API base URL and ensure the backend CORS policy allows the deployed frontend origin.
 
-Modules: `auth`, `users`, `dashboard`, `members`, `plans`, `subscriptions`, `payments`, `trainers`, `assignments`, `attendance`, `workouts`, `equipment`, `maintenance`, `me`.
+**Important:** Vite exposes variables prefixed with `VITE_` to browser-side code. Never put database credentials, private API keys, or JWT signing secrets in frontend environment variables.
 
-**Adding an endpoint:** add the route, service logic and validation schema in the feature folder, add one line to the `ENDPOINTS` table in `docs/build_docs.py`, then run `npm run docs:build` so Swagger and Postman stay up to date.
+## Running the Application
 
----
+Start the backend and frontend in separate terminals.
 
-## 11. Documentation for the frontend team
+### Backend
 
-- **`docs/FRONTEND_GUIDE.md`**: login flow, response format, error codes, enum values, a ready-made `fetch` wrapper, screens per role and common flows (new member, renewal, reception desk, trainer creating a plan).
-- **Swagger UI**: `/api/docs` (raw spec at `/api/docs.json`).
-- **Postman**: import `docs/FitBook.postman_collection.json`; the login request saves the token automatically.
+From the `backend` directory:
 
-Member screens should use `/me/*`, not `/members/:id`, so the logged-in user is picked up automatically.
+```bash
+npm run dev
+```
 
----
+This assumes the backend package defines a `dev` script. Check `backend/package.json` if the command differs.
 
-## 12. Known limitations and next steps
+The backend is configured for local development on port `5000`.
 
-- **No frontend yet.** The planned stack is React: login, admin dashboard, members, subscriptions and payments, attendance desk, trainers and workouts, equipment and maintenance.
-- **Expiry is not automatic.** Call `POST /subscriptions/expire-check` once a day (cron job or an admin button).
-- **Payments are recorded, not processed.** There is no payment gateway; the method and status are stored as entered.
-- **No automated tests yet.** Endpoints were tested by hand with Postman and PowerShell; adding Jest and Supertest tests is a good next step.
-- **Sample dates are around October 2026**, so some "expiring soon" demo data will go stale over time.
-- **Ideas for later:** email or SMS renewal reminders, member photo upload, class booking, Docker setup, CI.
+### Frontend
 
----
+From the `frontend` directory:
+
+```bash
+npm run dev
+```
+
+Open the local URL printed by Vite, typically:
+
+```text
+http://localhost:3000
+```
+
+The frontend should communicate with the backend through the configured Vite proxy.
+
+### Production builds
+
+To build the frontend:
+
+```bash
+cd frontend
+npm run build
+```
+
+Vite generates the production build in `frontend/dist/`. This generated directory should not be committed to Git.
+
+Backend deployment requires configuring production environment variables, a reachable MySQL database, appropriate CORS settings, and a production start command.
+
+## Authentication and Authorization
+
+FitBook uses JWT-based authentication and role-based access control.
+
+The intended application roles are:
+
+- **Admin:** Access to administrative gym management functionality.
+- **Trainer:** Intended access to trainer-related functionality.
+- **Member:** Intended access to member-related functionality.
+
+The frontend API client attaches the authentication token to protected requests. The backend is responsible for validating tokens and enforcing permissions.
+
+Authentication and authorization must be enforced by the backend; hiding a page or button in the frontend is not a security boundary.
+
+## API Documentation
+
+Backend API documentation is maintained in:
+
+```text
+backend/docs/API.md
+```
+
+Use this document to review available endpoints, request formats, responses, and authentication requirements.
+
+The API uses JSON for request and response payloads where applicable. Protected endpoints require valid authentication credentials.
+
+For example, a health-check endpoint may be available at:
+
+```text
+GET /api/v1/health
+```
+
+The exact endpoint availability and response should be verified against the running backend.
+
+## Database
+
+MySQL stores the application's operational data, including information related to:
+
+- Users and roles.
+- Members and trainers.
+- Membership plans and subscriptions.
+- Payments.
+- Attendance.
+- Workout plans and exercises.
+- Equipment and maintenance.
+
+The database layer also includes SQL-level business rules through constraints, triggers, and stored procedures where implemented.
+
+Use the supplied database scripts to create and initialize the schema. Back up the database before running destructive migrations or modifying existing data.
+
+## Security Considerations
+
+Before deploying FitBook publicly:
+
+- Keep `.env` files, credentials, database passwords, and signing secrets out of Git.
+- Use strong, unique passwords for all accounts.
+- Never rely on default development credentials in production.
+- Generate a secure JWT secret and configure it through the deployment environment.
+- Restrict database access and avoid exposing the database publicly.
+- Configure CORS to allow only trusted frontend origins.
+- Use HTTPS for deployed frontend and backend traffic.
+- Verify backend authorization checks for every protected operation.
+- Avoid returning stack traces or internal error details to clients in production.
+- Review dependencies and keep them updated.
+- Do not store sensitive information in frontend environment variables.
+
+Development seed accounts and sample data must not be treated as production-ready user accounts.
+
+## Known Limitations
+
+- Trainer and member dashboards are currently placeholders.
+- Some frontend routes are not yet implemented beyond placeholder screens.
+- Production deployment and configuration may require additional work.
+- Security, authorization, validation, and end-to-end behavior should be tested before real-world use.
+
+## Future Improvements
+
+Potential next steps include:
+
+- Complete trainer and member dashboards.
+- Add automated backend and frontend tests.
+- Improve input validation and error handling.
+- Add reporting and analytics for gym operations.
+- Improve deployment automation and environment management.
+- Add production-ready logging, monitoring, and backup procedures.
+- Conduct a security review of authentication, authorization, and data access.
+
+## Contributing
+
+Contributions, suggestions, and bug reports are welcome.
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Make and test your changes.
+4. Commit your changes with a descriptive message.
+5. Open a pull request describing the changes.
 
 ## License
 
-MIT. See `LICENSE`.
+Add the project's chosen license here before distributing or accepting contributions under an open-source license.

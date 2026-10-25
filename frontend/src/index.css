@@ -1,0 +1,111 @@
+/*
+ * src/index.css
+ * -------------
+ * Global styles for FitBook.
+ *
+ * COLOUR PALETTE (extracted from the reference dashboard image)
+ * ─────────────────────────────────────────────────────────────
+ * The image shows a professional gym management dashboard with:
+ *   • A very dark near-black background (slight warm undertone)
+ *   • Dark charcoal card/panel surfaces
+ *   • A rich gold / amber accent colour for branding and highlights
+ *   • Light warm-white primary text
+ *   • Muted warm-grey secondary text
+ *   • Subtle borders between elements
+ *
+ * CSS custom properties (variables) let us change the entire palette in
+ * one place instead of hunting for colour values across dozens of files.
+ */
+
+/* ── Import a clean, modern font from Google Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── Design tokens (the colour palette) ── */
+:root {
+  /* Backgrounds */
+  --bg:             #0f0e0c;   /* page background — near-black with warm tint */
+  --surface:        #1c1b18;   /* card / panel background */
+  --surface-alt:    #242220;   /* slightly raised surface (hover states, dropdowns) */
+
+  /* Gold accent — the brand colour from the reference image */
+  --gold:           #e8a020;   /* primary gold */
+  --gold-light:     #f5c84a;   /* bright highlight gold */
+  --gold-dark:      #a06b10;   /* deep gold for pressed states */
+  --gold-glow:      rgba(232, 160, 32, 0.12); /* subtle gold glow for shadows */
+
+  /* Text */
+  --text:           #f0efe8;   /* primary text — warm white */
+  --text-muted:     #7a7870;   /* secondary / placeholder text */
+  --text-on-gold:   #0f0e0c;   /* text placed directly on a gold background */
+
+  /* Structure */
+  --border:         #2e2c26;   /* subtle divider lines */
+  --radius:         12px;      /* default border-radius for cards */
+  --radius-sm:      8px;       /* smaller radius for buttons and inputs */
+
+  /* Shadows */
+  --shadow-sm:      0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md:      0 4px 16px rgba(0,0,0,0.5);
+  --shadow-gold:    0 0 24px var(--gold-glow);
+}
+
+/* ── Reset & base styles ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── Typography scale ── */
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+a {
+  color: var(--gold);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--gold-light);
+}
+
+/* ── Scrollbar styling (Webkit browsers) ── */
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: var(--bg); }
+::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── Utility: visually hidden (for accessibility) ── */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ── Keyframe animations ── */
+/* Used by the loading spinner in ProtectedRoute and LoginPage */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Subtle fade-in used on page entry */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+

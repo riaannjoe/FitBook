@@ -1,0 +1,507 @@
+/*
+ * src/pages/admin/SubscriptionsPage.module.css
+ * ---------------------------------------------
+ * Styles for the Subscriptions management page.
+ *
+ * Page layout:
+ *   Two-column grid:
+ *     LEFT  — Create Subscription form card
+ *     RIGHT — Expiring subscriptions list card
+ *   Full-width — Expire Check admin action card
+ *
+ * On tablet (<= 900px) the columns stack vertically.
+ */
+
+/* ── Page header ── */
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.pageTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.2px;
+  margin-bottom: 4px;
+}
+
+.pageSubtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ── Two-column layout ── */
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+  .twoCol { grid-template-columns: 1fr; }
+}
+
+/* ── Generic card / panel ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+}
+
+.cardHeader {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cardTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+
+.cardSubtitle {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.cardBody {
+  padding: 22px;
+  flex: 1;
+}
+
+/* ── Form fields (create subscription) ── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 16px;
+}
+
+.field:last-of-type { margin-bottom: 0; }
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+}
+
+.required::after {
+  content: ' *';
+  color: #f87171;
+}
+
+.select, .input {
+  padding: 10px 13px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s ease;
+  appearance: auto;
+}
+
+.select::placeholder, .input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.55;
+}
+
+.select:focus, .input:focus { border-color: var(--gold); }
+.select.invalid, .input.invalid { border-color: #f87171; }
+.select option { background: var(--surface); }
+
+.fieldError {
+  font-size: 11.5px;
+  color: #f87171;
+}
+
+.hint {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.formError {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: rgba(248,113,113,0.10);
+  border: 1px solid rgba(248,113,113,0.30);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #fca5a5;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+/* ── Submit button ── */
+.submitBtn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 11px 0;
+  background: var(--gold);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-on-gold);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s;
+}
+
+.submitBtn:hover:not(:disabled) { background: var(--gold-light); }
+.submitBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Success result card (shown after create) ── */
+.successBox {
+  background: rgba(74,222,128,0.07);
+  border: 1px solid rgba(74,222,128,0.25);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.successTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.successRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 12.5px;
+  border-bottom: 1px solid rgba(74,222,128,0.12);
+}
+
+.successRow:last-child { border-bottom: none; }
+.successKey   { color: var(--text-muted); }
+.successValue { color: var(--text); font-weight: 500; }
+
+/* ── Expiring list items ── */
+.expiringList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.expiringItem {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 13px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  animation: fadeIn 0.2s ease;
+}
+
+.expiringLeft {
+  min-width: 0;
+}
+
+.expiringName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.expiringPhone {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.expiringRight {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.expiringDate {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.expiringDays {
+  font-size: 11.5px;
+  margin-top: 2px;
+}
+
+.urgentDays { color: #f87171; }
+.soonDays   { color: #fbbf24; }
+.okDays     { color: #4ade80; }
+
+/* ── Days filter row ── */
+.daysRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.daysLabel {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.daysSelect {
+  padding: 6px 10px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+.daysSelect:focus { border-color: var(--gold); }
+.daysSelect option { background: var(--surface); }
+
+/* ── Expire check card ── */
+.expireCheckCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.expireCheckLeft {}
+
+.expireCheckTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+
+.expireCheckDesc {
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 520px;
+  line-height: 1.55;
+}
+
+.expireCheckBtn {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid var(--gold-dark);
+  border-radius: var(--radius-sm);
+  color: var(--gold);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.expireCheckBtn:hover:not(:disabled) {
+  background: var(--gold-glow);
+  border-color: var(--gold);
+}
+
+.expireCheckBtn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ── Expire check result ── */
+.expireResult {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.expireResultNum {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* ── State boxes (loading / empty / error) ── */
+.stateBox {
+  padding: 36px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.stateIcon  { font-size: 32px; margin-bottom: 10px; }
+.stateTitle { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+.stateMsg   { font-size: 12.5px; color: var(--text-muted); margin-bottom: 14px; }
+
+.retryBtn {
+  padding: 7px 20px;
+  background: var(--gold);
+  color: var(--text-on-gold);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.retryBtn:hover { background: var(--gold-light); }
+
+/* ── Skeleton bars ── */
+.skeletonBar {
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--surface-alt) 25%, var(--border) 50%, var(--surface-alt) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Inline spinner ── */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(15,14,12,0.25);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ── Badge ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.badge.active    { background: rgba(74,222,128,0.12); color: #4ade80; }
+.badge.expired   { background: rgba(248,113,113,0.12); color: #f87171; }
+.badge.cancelled { background: rgba(148,163,184,0.12); color: #94a3b8; }
+
+/* ── Confirm modal ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.15s ease;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 440px;
+  box-shadow: var(--shadow-md);
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modalBody { padding: 28px 24px; text-align: center; }
+.modalIcon  { font-size: 36px; margin-bottom: 12px; }
+.modalTitle { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.modalMsg   { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; }
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.cancelBtn {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.cancelBtn:hover { border-color: var(--text-muted); color: var(--text); }
+
+.confirmBtn {
+  padding: 10px 22px;
+  background: var(--gold);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-on-gold);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.15s;
+}
+
+.confirmBtn:hover:not(:disabled) { background: var(--gold-light); }
+.confirmBtn:disabled { opacity: 0.6; cursor: not-allowed; }

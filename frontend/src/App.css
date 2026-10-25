@@ -1,0 +1,9 @@
+/*
+ * src/App.css — intentionally empty.
+ *
+ * Global styles live in index.css.
+ * Component-specific styles will use plain <style> blocks or
+ * separate CSS files imported inside each component.
+ * This file is kept so Vite doesn't error if a future auto-generated
+ * component imports it.
+ */
