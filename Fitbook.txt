@@ -7,3 +7,5 @@ Frontend:
 
 cd "C:\Users\LENOVO\Desktop\Repositories\FitBook\FitBook\frontend"
 npm run dev
+
+http://localhost:3000/
