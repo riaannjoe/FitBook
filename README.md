@@ -1,135 +1,202 @@
 # FitBook — Smart Gym Management System
 
-FitBook is a full-stack gym management application designed to simplify everyday gym operations, including member management, subscriptions, payments, trainer assignments, attendance tracking, workout plans, and equipment maintenance.
+**DBMS Software Project · IA203 — Database Management Systems**  
+**Department of Artificial Intelligence · SVNIT Surat · 3rd Semester, 2026–27**
 
-The project combines a React frontend with a Node.js/Express REST API and a MySQL database.
+FitBook is a gym-management web application that brings member profiles, membership plans, subscriptions, payments, trainer management, attendance, workout planning, equipment inventory, and maintenance requests into one system. It uses a React frontend, a Node.js/Express REST API, and a MySQL relational database, with JWT authentication and role-based access for administrators, trainers, and members.
 
-> **Project status:** The backend API and admin frontend have been implemented. Trainer and member dashboards are currently placeholders, and some features remain under development.
+<p align="center">
+  <img src="docs/screenshots/admin-dashboard.jpeg" alt="FitBook admin dashboard" width="900" />
+</p>
 
 ## Table of Contents
 
+- [Overview](#overview)
+- [Problem Statement](#problem-statement)
+- [Objectives](#objectives)
 - [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
+- [Technology Stack](#technology-stack)
+- [System Architecture](#system-architecture)
+- [ER Diagram](#er-diagram)
+- [Database Design](#database-design)
+- [DBMS Concepts Demonstrated](#dbms-concepts-demonstrated)
 - [Project Structure](#project-structure)
-- [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
-- [Environment Configuration](#environment-configuration)
-- [Running the Application](#running-the-application)
-- [Authentication and Authorization](#authentication-and-authorization)
-- [API Documentation](#api-documentation)
-- [Database](#database)
-- [Security Considerations](#security-considerations)
-- [Known Limitations](#known-limitations)
-- [Future Improvements](#future-improvements)
+- [API Overview](#api-overview)
+- [Security](#security)
+- [Screenshots](#screenshots)
+- [Testing](#testing)
+- [Limitations and Future Improvements](#limitations-and-future-improvements)
+- [Team / Academic Context](#team--academic-context)
+
+## Overview
+
+Gym operations involve many connected records: members subscribe to plans, subscriptions generate payment records, trainers work with members, attendance needs to be recorded, and equipment issues need to be resolved. FitBook models these relationships in a relational database and provides a web interface for authorised users to manage and review the information.
+
+## Problem Statement
+
+Maintaining gym records separately can lead to duplicated data, inconsistent membership statuses, difficulty tracking renewals and payments, and limited visibility into attendance and equipment issues. FitBook centralises these operations and uses database relationships and application rules to help keep information organised.
+
+## Objectives
+
+- Maintain centralised member, trainer, plan, subscription, and payment records.
+- Support subscription creation, renewal, cancellation, and expiry checks.
+- Record attendance check-ins/check-outs and provide attendance summaries.
+- Manage trainer schedules and trainer–member assignments.
+- Maintain an exercise library and workout plans that can be assigned to members.
+- Track equipment inventory and maintenance requests, including resolution and repair cost.
+- Demonstrate relational database design, SQL queries, constraints, joins, reporting, transactions, views, stored procedures, triggers, and indexes.
 
 ## Features
 
-### Admin Dashboard
+| Module | Main capabilities |
+|---|---|
+| Authentication and users | Username/password login, JWT-based authentication, identity lookup, password change, and administrator-managed accounts. |
+| Dashboard | Summary metrics for memberships, revenue, attendance, and open maintenance issues. |
+| Members | Register, search, filter, view, update, and remove member records. |
+| Membership plans | Create and manage plan names, durations, prices, and descriptions. |
+| Subscriptions | Create/renew subscriptions, cancel subscriptions, view upcoming expiries, and run an expiry check. |
+| Payments and reports | Review payment history and revenue summaries. Only paid transactions should count as revenue. |
+| Trainers and assignments | Manage trainer profiles and schedules, view clients, and maintain trainer–member assignments. |
+| Attendance | Check members in/out, view current attendance, and review attendance analytics. |
+| Exercises and workouts | Maintain an exercise library, create workout plans, define exercise/set/rep details, and assign plans. |
+| Equipment | Maintain gym equipment inventory and equipment status. |
+| Maintenance | Report issues, track status through resolution, and record repair costs. |
+| Member/trainer portal | Access role-appropriate profile and activity information, subject to implemented permissions. |
 
-- **Dashboard:** Overview of gym operations and key metrics.
-- **Member Management:** View and manage member records.
-- **Membership Plans:** Manage available membership plans.
-- **Subscriptions:** Track member subscriptions and renewals.
-- **Payments:** Access payment records and related information.
-- **Trainer Management:** Manage trainer records.
-- **Attendance:** Track gym attendance.
-- **Workout Management:** Manage workout plans and exercise information.
-- **Equipment Management:** Maintain equipment records.
-- **Maintenance Management:** Track equipment maintenance requests.
+## Technology Stack
 
-### Backend
-
-- RESTful API built with Express.js.
-- MySQL database integration.
-- JWT-based authentication.
-- Role-based access control.
-- Password hashing using bcrypt.
-- Request validation and centralized error handling where implemented.
-- Database constraints and business rules.
-- SQL triggers and stored procedures.
-
-## Tech Stack
-
-| Layer | Technologies |
+| Layer | Technology |
 |---|---|
 | Frontend | React, Vite, JavaScript, CSS |
 | Backend | Node.js, Express.js |
-| Database | MySQL 8 |
-| Authentication | JSON Web Tokens (JWT), bcrypt |
-| API communication | HTTP/REST, JSON |
-| Development tools | Git, GitHub, npm |
+| Database | MySQL |
+| Authentication | JSON Web Tokens (JWT), password hashing with bcrypt where configured |
+| Request validation | Zod where configured in the API |
+| API communication | REST endpoints with JSON responses |
+| API documentation/testing | Swagger/OpenAPI and a Postman collection where included in the repository |
+| Development tools | Git, GitHub, npm, Visual Studio Code |
 
-## Architecture
+## System Architecture
 
-FitBook follows a client-server architecture.
+FitBook follows a client–server architecture:
 
 ```text
-                User
-                  |
-                  v
-          React + Vite Frontend
-             localhost:3000
-                  |
-                  | HTTP requests
-                  | /api/*
-                  v
-          Node.js + Express API
-             localhost:5000
-                  |
-                  | SQL queries
-                  v
-              MySQL 8
+User
+  |
+  v
+React + Vite frontend
+  |  HTTP requests / JSON
+  v
+Node.js + Express REST API
+  |  routes, authentication/role middleware,
+  |  validation, controllers and business logic
+  v
+MySQL relational database
+  |
+  v
+JSON response returned to the frontend
 ```
 
-During local development, Vite proxies API requests to the Express server. In production, the frontend and backend can be deployed separately and configured to communicate through the deployed API URL.
+The frontend presents the user interface. The Express API handles incoming requests, applies authentication and validation, executes application/database logic, and returns responses. MySQL stores the relational data.
+
+## ER Diagram
+
+The entity–relationship diagram for the database is included below. The original diagram PDF is also available at [`docs/er-diagram.pdf`](docs/er-diagram.pdf).
+
+<p align="center">
+  <img src="docs/er-diagram.png" alt="FitBook entity relationship diagram" width="1000" />
+</p>
+
+## Database Design
+
+The documented schema contains **15 tables**:
+
+| Table | Purpose |
+|---|---|
+| `users` | Login identity, password hash, and user role. |
+| `members` | Member profile and membership status. |
+| `membership_plans` | Membership plan details, duration, and price. |
+| `subscriptions` | Selected plan, member, subscription dates, and status. |
+| `payments` | Payment amount, method, status, and associated subscription. |
+| `trainers` | Trainer profile, specialization, and salary. |
+| `trainer_schedules` | Weekly working hours for trainers. |
+| `trainer_assignments` | Assignment relationships between trainers and members. |
+| `attendance` | Member check-in and check-out records. |
+| `exercises` | Exercise library. |
+| `workout_plans` | Workout plan title, goal, level, and trainer/owner. |
+| `workout_plan_exercises` | Exercises included in plans, with day, sets, and reps. |
+| `member_workout_plans` | Workout plan assignments to members. |
+| `equipment` | Gym equipment inventory and status. |
+| `maintenance_requests` | Equipment issue reports, resolution details, and repair cost. |
+
+For exact columns, data types, keys, constraints, and foreign-key actions, use the SQL schema included in the project repository as the source of truth.
+
+### Key relationships
+
+- A member can have multiple subscription records over time.
+- A membership plan can be referenced by multiple subscriptions.
+- A subscription can have associated payment records.
+- Trainers can have multiple schedule entries and member assignments.
+- Members can have multiple attendance records.
+- Workout plans and exercises are related through `workout_plan_exercises`.
+- Workout plans can be assigned to members through `member_workout_plans`.
+- Equipment can have multiple maintenance requests.
+- Login users may be associated with member or trainer profiles, depending on the configured relationship.
+
+## DBMS Concepts Demonstrated
+
+- **Keys and relationships:** primary keys and foreign keys connect related records and help preserve referential integrity.
+- **Constraints:** enforce valid data and uniqueness where defined by the schema.
+- **CRUD operations:** `SELECT`, `INSERT`, `UPDATE`, and `DELETE` manage application records.
+- **Joins:** combine related entities, such as members with subscriptions and plans.
+- **Aggregate functions and `GROUP BY`:** summarise revenue and attendance information.
+- **View:** `v_dashboard` provides dashboard summary information where installed by the SQL scripts.
+- **Stored procedure:** `sp_subscribe` handles subscription/renewal logic where installed by the SQL scripts.
+- **Triggers:** maintenance-related triggers synchronise equipment status with maintenance requests where configured.
+- **Indexes:** support common searches such as attendance dates, subscription end dates, and payment dates.
+- **Transactions:** subscription and payment operations are intended to remain consistent when executed as a single transaction.
+- **Normalisation:** the schema is designed around separating major entities and relationships to reduce redundant storage and common insertion, update, and deletion anomalies. The project documentation describes the design as targeting 3NF.
 
 ## Project Structure
 
+The exact folder layout can differ slightly between repository versions. The project is organised around frontend and backend applications and database/API documentation. A typical layout is:
+
 ```text
 FitBook/
-├── backend/
-│   ├── config/              # Backend configuration
-│   ├── controllers/         # Request handlers
-│   ├── database/            # Database scripts and seed utilities
-│   ├── docs/                # API documentation
-│   ├── middleware/          # Authentication and other middleware
-│   ├── models/              # Data access and models
-│   ├── routes/              # API route definitions
-│   ├── services/            # Business logic, where implemented
-│   ├── .env.example         # Environment variable template
-│   └── package.json
-│
-├── frontend/
-│   ├── public/              # Static assets
+├── frontend/                 # React + Vite application
 │   ├── src/
-│   │   ├── api/             # API client
-│   │   ├── assets/          # Images and other assets
-│   │   ├── components/      # Reusable UI components
-│   │   ├── context/         # React context
-│   │   └── pages/           # Application pages
-│   ├── .env.example         # Frontend environment template
+│   │   ├── api/              # API client and requests
+│   │   ├── components/       # Reusable UI components
+│   │   ├── context/          # Authentication/toast context
+│   │   └── pages/             # Dashboard and feature pages
 │   ├── package.json
 │   └── vite.config.js
-│
-├── .gitignore
+├── backend/                  # Node.js + Express API
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── routes/
+│   ├── services/
+│   ├── database/ or docs/    # SQL and API documentation, as present
+│   └── package.json
+├── docs/
+│   ├── er-diagram.pdf
+│   ├── er-diagram.png
+│   └── screenshots/
 └── README.md
 ```
 
-*The directory structure may evolve as development continues.*
-
-## Prerequisites
-
-Install the following before running FitBook locally:
-
-- [Node.js](https://nodejs.org/) and npm.
-- [MySQL 8](https://dev.mysql.com/downloads/).
-- [Git](https://git-scm.com/).
-- A code editor such as [Visual Studio Code](https://code.visualstudio.com/).
-
-Ensure MySQL is running and that you have permission to create and manage a database.
-
 ## Getting Started
+
+> **Important:** Use the actual package scripts, environment-variable names, and SQL file paths in your downloaded repository. The commands below are the usual local setup flow; filenames can vary by version.
+
+### Prerequisites
+
+- [Node.js and npm](https://nodejs.org/)
+- [MySQL](https://dev.mysql.com/downloads/)
+- [Git](https://git-scm.com/)
+- [Visual Studio Code](https://code.visualstudio.com/) or another code editor
 
 ### 1. Clone the repository
 
@@ -138,273 +205,167 @@ git clone <YOUR_GITHUB_REPOSITORY_URL>
 cd FitBook
 ```
 
-Replace the repository URL with the actual URL of your GitHub repository.
+Replace `<YOUR_GITHUB_REPOSITORY_URL>` with the URL of your GitHub repository.
 
-### 2. Configure the database
+### 2. Create the database
 
-Start MySQL and create a database for FitBook.
+Start MySQL and create the database if it does not already exist:
 
 ```sql
 CREATE DATABASE fitbook;
 ```
 
-Review the SQL files in `backend/database/` and import the schema, seed data, triggers, and stored procedures as applicable. Follow the order and instructions provided by the database scripts.
+Import the project schema and seed data using the SQL files supplied in your repository. Check the database folder and follow any order specified in the scripts. Do not run the same seed script repeatedly unless it is designed to be re-run safely.
 
-Make sure the database name and credentials match your backend environment configuration.
+### 3. Configure and start the backend
 
-### 3. Configure the backend
-
-Open a terminal in the project root:
+Open a terminal:
 
 ```bash
 cd backend
 npm install
 ```
 
-Create a local environment file by copying the template.
+Create the backend `.env` file using the repository's `.env.example` if one is provided. Set the MySQL host, port, database name, username, password, and required authentication/JWT settings according to the variable names expected by the backend. Never commit real passwords, tokens, or the `.env` file.
 
-**Windows PowerShell:**
-
-```powershell
-Copy-Item .env.example .env
-```
-
-**macOS/Linux:**
+Start the backend using the script defined in `backend/package.json`, commonly:
 
 ```bash
-cp .env.example .env
+npm run dev
 ```
 
-Open `backend/.env` and configure the database connection, JWT secret, and other required settings. See [Environment Configuration](#environment-configuration).
+If the repository uses a different script, check `package.json` and use that script instead.
 
-Never commit your actual `.env` file.
+### 4. Configure and start the frontend
 
-### 4. Configure the frontend
-
-Open a second terminal in the project root:
+Open a second terminal from the project root:
 
 ```bash
 cd frontend
 npm install
 ```
 
-Create the local environment file.
-
-**Windows PowerShell:**
-
-```powershell
-Copy-Item .env.example .env
-```
-
-**macOS/Linux:**
-
-```bash
-cp .env.example .env
-```
-
-For local development, configure:
-
-```env
-VITE_API_BASE=/api/v1
-```
-
-The Vite development server proxies `/api` requests to the backend running on port `5000`.
-
-### 5. Prepare development accounts
-
-If you need seeded development accounts, inspect the available seed scripts and their instructions.
-
-Configure an explicit `SEED_PASSWORD` in `backend/.env` before running the user-seeding script. Use a strong, unique password and do not reuse development credentials in production.
-
-Run the seed command from the `backend` directory if your `package.json` defines it:
-
-```bash
-npm run seed:users
-```
-
-Only run the seed command after configuring the database and required environment variables.
-
-## Environment Configuration
-
-### Backend
-
-Configure the variables supported by `backend/.env.example`. Typical settings include:
-
-| Variable | Purpose |
-|---|---|
-| `DB_HOST` | MySQL server hostname |
-| `DB_PORT` | MySQL server port, if supported by the configuration |
-| `DB_USER` | MySQL username |
-| `DB_PASS` | MySQL password |
-| `DB_NAME` | Database name |
-| `JWT_SECRET` | Secret used to sign authentication tokens |
-| `CORS_ORIGIN` | Allowed frontend origin or origins |
-| `SEED_PASSWORD` | Explicit password for seeded development accounts |
-
-The exact required variables depend on the backend configuration. Consult `backend/.env.example` and `backend/config/env.js`.
-
-Use a long, randomly generated JWT secret. Keep all real credentials in local environment files or your deployment provider's secret manager.
-
-### Frontend
-
-Configure `frontend/.env.example` as needed.
-
-| Variable | Purpose |
-|---|---|
-| `VITE_API_BASE` | Base path or URL used by the frontend API client |
-
-For local development:
-
-```env
-VITE_API_BASE=/api/v1
-```
-
-For a separately deployed API, configure the appropriate HTTPS API base URL and ensure the backend CORS policy allows the deployed frontend origin.
-
-**Important:** Vite exposes variables prefixed with `VITE_` to browser-side code. Never put database credentials, private API keys, or JWT signing secrets in frontend environment variables.
-
-## Running the Application
-
-Start the backend and frontend in separate terminals.
-
-### Backend
-
-From the `backend` directory:
+If a frontend environment template is provided, create the local `.env` file and configure the API/proxy value as required by the project. Then run:
 
 ```bash
 npm run dev
 ```
 
-This assumes the backend package defines a `dev` script. Check `backend/package.json` if the command differs.
+Open the local URL printed by Vite in the terminal. If the frontend uses port `3000`, open `http://localhost:3000`; otherwise use the URL Vite displays.
 
-The backend is configured for local development on port `5000`.
+### 5. Sign in
 
-### Frontend
+Use an account created through the project's seed data or administrator account-creation workflow. Do not rely on credentials copied from screenshots or documentation. If sign-in fails, check that MySQL is running, backend environment variables are correct, the backend is listening on its configured port, and the frontend API proxy/base URL points to the backend.
 
-From the `frontend` directory:
+## API Overview
 
-```bash
-npm run dev
-```
+The API is organised into feature groups. The following paths are documented by the project; confirm the current route files or Swagger page for exact availability and request formats.
 
-Open the local URL printed by Vite, typically:
+| Group | Example endpoints |
+|---|---|
+| Health | `GET /health` |
+| Authentication | `POST /auth/login`, `GET /auth/me`, `POST /auth/change-password` |
+| Users | `GET /users`, `POST /users`, `DELETE /users/:id` |
+| Dashboard | `GET /dashboard` |
+| Members | `GET /members`, `POST /members`, `GET /members/:id`, `PUT /members/:id`, `DELETE /members/:id` |
+| Plans | `GET /plans`, `GET /plans/:id`, `POST /plans`, `PUT /plans/:id`, `DELETE /plans/:id` |
+| Subscriptions | `GET /subscriptions`, `POST /subscriptions`, `GET /subscriptions/expiring`, `POST /subscriptions/expire-check`, `PATCH /subscriptions/:id/cancel` |
+| Payments/reports | `GET /payments`, `GET /reports/revenue` |
+| Trainers | `GET /trainers`, `POST /trainers`, trainer schedule and client endpoints where implemented |
+| Attendance | `GET /attendance`, `GET /attendance/live`, `GET /attendance/analytics`, `POST /attendance/check-in`, `POST /attendance/check-out` |
+| Exercises | `GET /exercises`, `POST /exercises`, `PUT /exercises/:id`, `DELETE /exercises/:id` |
+| Workout plans | `GET /workout-plans`, `POST /workout-plans`, `GET /workout-plans/:id`, `POST /workout-plans/assign` |
+| Equipment | `GET /equipment`, `GET /equipment/:id`, `POST /equipment`, `PUT /equipment/:id`, `DELETE /equipment/:id` |
+| Maintenance | `GET /maintenance`, `POST /maintenance`, `PUT /maintenance/:id` |
+| Personal portal | `/me/profile`, `/me/subscription`, `/me/workout`, `/me/attendance`, `/me/payments` and role-specific routes where implemented |
 
-```text
-http://localhost:3000
-```
+If Swagger/OpenAPI is configured, use the API documentation endpoint exposed by the running backend. Route availability and permissions may differ by implementation version.
 
-The frontend should communicate with the backend through the configured Vite proxy.
+## Security
 
-### Production builds
+- Passwords should be stored as hashes, not plaintext.
+- Protected endpoints should validate JWTs and enforce role/ownership permissions.
+- Validate incoming data before writing to the database.
+- Use parameterised SQL queries to reduce SQL-injection risk.
+- Keep secrets in environment variables and exclude `.env` files from Git.
+- Never publish production credentials, private tokens, or real member personal data in screenshots or seed files.
 
-To build the frontend:
+## Screenshots
 
-```bash
-cd frontend
-npm run build
-```
+The following screenshots show the application interface. They are stored in `docs/screenshots/` so they display in GitHub after the folder is committed with this README.
 
-Vite generates the production build in `frontend/dist/`. This generated directory should not be committed to Git.
+### Login
 
-Backend deployment requires configuring production environment variables, a reachable MySQL database, appropriate CORS settings, and a production start command.
+![FitBook login screen](docs/screenshots/login-screen.jpeg)
 
-## Authentication and Authorization
+### Admin dashboard
 
-FitBook uses JWT-based authentication and role-based access control.
+![FitBook admin dashboard](docs/screenshots/admin-dashboard.jpeg)
 
-The intended application roles are:
+### Member management
 
-- **Admin:** Access to administrative gym management functionality.
-- **Trainer:** Intended access to trainer-related functionality.
-- **Member:** Intended access to member-related functionality.
+![FitBook member management](docs/screenshots/members-page.jpeg)
 
-The frontend API client attaches the authentication token to protected requests. The backend is responsible for validating tokens and enforcing permissions.
+### Membership plans
 
-Authentication and authorization must be enforced by the backend; hiding a page or button in the frontend is not a security boundary.
+![FitBook membership plans](docs/screenshots/membership-plans.jpeg)
 
-## API Documentation
+### Subscriptions
 
-Backend API documentation is maintained in:
+![FitBook subscriptions](docs/screenshots/subscriptions-page.jpeg)
 
-```text
-backend/docs/API.md
-```
+### Payments
 
-Use this document to review available endpoints, request formats, responses, and authentication requirements.
+![FitBook payments](docs/screenshots/payments-page.jpeg)
 
-The API uses JSON for request and response payloads where applicable. Protected endpoints require valid authentication credentials.
+### Workout management
 
-For example, a health-check endpoint may be available at:
+![FitBook workout management](docs/screenshots/workouts-page.jpeg)
 
-```text
-GET /api/v1/health
-```
+### Maintenance tracking
 
-The exact endpoint availability and response should be verified against the running backend.
+![FitBook maintenance tracking](docs/screenshots/maintenance-page.jpeg)
 
-## Database
+## Testing
 
-MySQL stores the application's operational data, including information related to:
+Test the running system before describing a feature as fully verified. Suggested scenarios include:
 
-- Users and roles.
-- Members and trainers.
-- Membership plans and subscriptions.
-- Payments.
-- Attendance.
-- Workout plans and exercises.
-- Equipment and maintenance.
+| Test | Expected result |
+|---|---|
+| API health check | API returns a successful response when the server and database are available. |
+| Valid login | Credentials are accepted and user/token information is returned. |
+| Invalid login | Request is rejected with an authentication error. |
+| Create/update member | Valid data is saved; invalid data is rejected with useful validation feedback. |
+| Create subscription | Subscription and payment records are handled consistently and member status is updated according to the business rules. |
+| Attendance without active membership | Request is rejected if the configured rule requires an active subscription. |
+| Resolve maintenance request | Request status and related equipment status update according to the configured logic. |
+| Role/ownership access | Users cannot access data outside their permitted role or ownership scope. |
+| Revenue report | Only payments with the configured paid status contribute to revenue. |
 
-The database layer also includes SQL-level business rules through constraints, triggers, and stored procedures where implemented.
+Actual results should be recorded after each scenario is executed. Screenshots demonstrate the UI, but do not alone prove every backend test has passed.
 
-Use the supplied database scripts to create and initialize the schema. Back up the database before running destructive migrations or modifying existing data.
+## Limitations and Future Improvements
 
-## Security Considerations
+Potential or documented areas for further work include:
 
-Before deploying FitBook publicly:
+- End-to-end testing of all frontend workflows against the API.
+- Automated API tests and continuous integration.
+- Scheduled subscription-expiry checks and renewal reminders.
+- Payment-gateway integration; the current application records payment information rather than necessarily processing real payments.
+- Further development of trainer/member portal pages and permissions, depending on the current implementation.
+- More reporting, class booking, and notification features.
 
-- Keep `.env` files, credentials, database passwords, and signing secrets out of Git.
-- Use strong, unique passwords for all accounts.
-- Never rely on default development credentials in production.
-- Generate a secure JWT secret and configure it through the deployment environment.
-- Restrict database access and avoid exposing the database publicly.
-- Configure CORS to allow only trusted frontend origins.
-- Use HTTPS for deployed frontend and backend traffic.
-- Verify backend authorization checks for every protected operation.
-- Avoid returning stack traces or internal error details to clients in production.
-- Review dependencies and keep them updated.
-- Do not store sensitive information in frontend environment variables.
+## Team / Academic Context
 
-Development seed accounts and sample data must not be treated as production-ready user accounts.
+**Course:** IA203 — Database Management Systems  
+**Department:** Artificial Intelligence, SVNIT Surat  
+**Semester:** 3rd Semester, 2026–27
 
-## Known Limitations
+## References
 
-- Trainer and member dashboards are currently placeholders.
-- Some frontend routes are not yet implemented beyond placeholder screens.
-- Production deployment and configuration may require additional work.
-- Security, authorization, validation, and end-to-end behavior should be tested before real-world use.
-
-## Future Improvements
-
-Potential next steps include:
-
-- Complete trainer and member dashboards.
-- Add automated backend and frontend tests.
-- Improve input validation and error handling.
-- Add reporting and analytics for gym operations.
-- Improve deployment automation and environment management.
-- Add production-ready logging, monitoring, and backup procedures.
-- Conduct a security review of authentication, authorization, and data access.
-
-## Contributing
-
-Contributions, suggestions, and bug reports are welcome.
-
-1. Fork the repository.
-2. Create a feature branch.
-3. Make and test your changes.
-4. Commit your changes with a descriptive message.
-5. Open a pull request describing the changes.
-
-## License
-
-Add the project's chosen license here before distributing or accepting contributions under an open-source license.
+- [React documentation](https://react.dev/)
+- [Vite documentation](https://vite.dev/)
+- [Node.js documentation](https://nodejs.org/docs/)
+- [Express documentation](https://expressjs.com/)
+- [MySQL documentation](https://dev.mysql.com/doc/)
+- Project source code, database scripts, and API documentation included in the repository.
