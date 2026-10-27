@@ -53,7 +53,6 @@ const NAV_GROUPS = [
     label: 'Staff',
     items: [
       { label: 'Trainers',     path: '/admin/trainers',    icon: <StarIcon />,      implemented: true },
-      { label: 'Assignments',  path: '/admin/assignments', icon: <LinkIcon />,      implemented: false },
     ],
   },
   {

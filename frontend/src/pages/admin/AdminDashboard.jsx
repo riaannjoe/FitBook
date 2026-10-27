@@ -210,10 +210,10 @@ export default function AdminDashboard() {
             <div className={styles.infoCard}>
               <div className={styles.infoTitle}>Metric sources</div>
               {[
-                ['Active memberships', 'subscriptions WHERE status=active AND end_date ≥ today'],
-                ['Monthly revenue',    `SUM of paid payments in ${new Date().toLocaleString('en-IN', { month: 'long' })}`],
-                ["Today's attendance", 'attendance rows WHERE check_in date = today'],
-                ['Open issues',        'maintenance_requests WHERE status ≠ resolved'],
+                ['Active memberships', 'Currently active, unexpired subscriptions'],
+                ['Monthly revenue',    `Total payments received in ${new Date().toLocaleString('en-IN', { month: 'long' })}`],
+                ["Today's attendance", 'Total check-ins recorded today'],
+                ['Open issues',        'Maintenance requests awaiting resolution'],
               ].map(([k, v]) => (
                 <div key={k} className={styles.infoRow}>
                   <span className={styles.infoKey}>{k}</span>
